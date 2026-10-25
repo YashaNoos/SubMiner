@@ -827,6 +827,18 @@ export function createKeyboardHandlers(
     return true;
   }
 
+  // Sends the same Alt+Up / Alt+Down a keyboard user would press, which Yomitan's
+  // default hotkeys map to its previousEntry / nextEntry actions. Moving the entry
+  // also changes which entry "mine selected" mines.
+  function movePopupEntryForController(direction: -1 | 1): boolean {
+    if (!isLookupPopupOpen(ctx.state, document)) {
+      return false;
+    }
+    const key = direction < 0 ? 'ArrowUp' : 'ArrowDown';
+    dispatchYomitanPopupKeydown(key, key, ['alt'], false);
+    return true;
+  }
+
   function playCurrentAudioForController(): boolean {
     if (!isLookupPopupOpen(ctx.state, document)) {
       return false;
@@ -1390,6 +1402,7 @@ export function createKeyboardHandlers(
     mineSelectedFromController,
     cyclePopupAudioSourceForController,
     playCurrentAudioForController,
+    movePopupEntryForController,
     scrollPopupByController,
   };
 }
