@@ -1,16 +1,17 @@
-name: Branch AppImage
+name: Fork AppImage
 
-# Fork-only test build: produces a Linux AppImage of this branch as a
+# Fork-only build: produces a Linux AppImage of main or any feature branch as a
 # downloadable workflow artifact. Mirrors the build-linux job in
 # package-release.yml, minus the signing secrets the release flow needs.
+# Leave this file out of pull requests to the original SubMiner project.
 on:
   push:
     branches:
-      - feat/controller-hold-secondary-sub
+      - '**'
   workflow_dispatch:
 
 concurrency:
-  group: branch-appimage-${{ github.ref }}
+  group: fork-appimage-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -62,7 +63,7 @@ jobs:
         shell: bash
         run: xvfb-run -a bun run test:package "dist/release/linux-unpacked/resources"
 
-      - name: Name artifact after the commit
+      - name: Name artifact after the branch and commit
         id: meta
         shell: bash
         run: |
@@ -74,13 +75,16 @@ jobs:
             exit 1
           fi
           short_sha="${GITHUB_SHA::7}"
-          cp "${appimages[0]}" "dist/release/SubMiner-${short_sha}.AppImage"
-          echo "short_sha=${short_sha}" >> "$GITHUB_OUTPUT"
+          # Artifact names can't contain '/', so feat/foo becomes feat-foo.
+          branch="${GITHUB_REF_NAME//\//-}"
+          label="${branch}-${short_sha}"
+          cp "${appimages[0]}" "dist/release/SubMiner-${label}.AppImage"
+          echo "label=${label}" >> "$GITHUB_OUTPUT"
 
       - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SubMiner-AppImage-${{ steps.meta.outputs.short_sha }}
-          path: dist/release/SubMiner-${{ steps.meta.outputs.short_sha }}.AppImage
+          name: SubMiner-AppImage-${{ steps.meta.outputs.label }}
+          path: dist/release/SubMiner-${{ steps.meta.outputs.label }}.AppImage
           if-no-files-found: error
           retention-days: 30
