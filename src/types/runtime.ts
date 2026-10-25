@@ -174,6 +174,8 @@ export type ControllerButtonBinding =
 
 export type ControllerAxisBinding = 'leftStickX' | 'leftStickY' | 'rightStickX' | 'rightStickY';
 export type ControllerTriggerInputMode = 'auto' | 'digital' | 'analog';
+/** Letters printed on the face buttons: Xbox-style (A at the bottom) or Nintendo-style (A on the right). */
+export type ControllerFaceButtonLabels = 'xbox' | 'nintendo';
 export type ControllerAxisDirection = 'negative' | 'positive';
 export type ControllerDpadFallback = 'none' | 'horizontal' | 'vertical';
 
@@ -295,6 +297,7 @@ export interface ControllerConfig {
   horizontalJumpPixels?: number;
   stickDeadzone?: number;
   triggerInputMode?: ControllerTriggerInputMode;
+  faceButtonLabels?: ControllerFaceButtonLabels;
   triggerDeadzone?: number;
   repeatDelayMs?: number;
   repeatIntervalMs?: number;
@@ -574,6 +577,7 @@ export interface ElectronAPI {
     callback: (payload: SessionNumericSelectionStartPayload) => void,
   ) => void;
   onKeyboardModeToggleRequested: (callback: () => void) => void;
+  onControllerSuspendedChanged: (callback: (suspended: boolean) => void) => void;
   onLookupWindowToggleRequested: (callback: () => void) => void;
   getPlaylistBrowserSnapshot: () => Promise<PlaylistBrowserSnapshot>;
   appendPlaylistBrowserFile: (path: string) => Promise<PlaylistBrowserMutationResult>;

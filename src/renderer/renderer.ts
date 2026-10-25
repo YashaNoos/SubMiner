@@ -49,6 +49,7 @@ import { createSubsyncModal } from './modals/subsync.js';
 import { createSubtitleGenerationModal } from './modals/subtitle-generation.js';
 import { createYoutubeTrackPickerModal } from './modals/youtube-track-picker.js';
 import { createMediaTimingReviewModal } from './modals/media-timing-review.js';
+import { createMediaTimingReviewControllerLayout } from './handlers/media-timing-review-controller.js';
 import { createPositioningController } from './positioning.js';
 import { createOverlayContentMeasurementReporter } from './overlay-content-measurement.js';
 import { syncOverlayMouseIgnoreState } from './overlay-mouse-ignore.js';
@@ -300,6 +301,12 @@ const mediaTimingReviewModal = createMediaTimingReviewModal(ctx, {
   modalStateReader: { isAnyModalOpen },
   syncSettingsModalSubtitleSuppression,
 });
+const mediaTimingReviewControllerLayout = createMediaTimingReviewControllerLayout({
+  getStep: () => mediaTimingReviewModal.getControllerStep(),
+  dispatch: (action) => {
+    mediaTimingReviewModal.handleControllerAction(action);
+  },
+});
 const keyboardHandlers = createKeyboardHandlers(ctx, {
   handleRuntimeOptionsKeydown: runtimeOptionsModal.handleRuntimeOptionsKeydown,
   handleCharacterDictionaryKeydown: characterDictionaryModal.handleCharacterDictionaryKeydown,
@@ -377,16 +384,23 @@ function applyControllerSnapshot(snapshot: {
   rawAxes: number[];
   rawButtons: Array<{ value: number; pressed: boolean; touched?: boolean }>;
 }): void {
-  controllerStatusIndicator.update({
-    connectedGamepads: snapshot.connectedGamepads,
-    activeGamepadId: snapshot.activeGamepadId,
-  });
+  // Modal windows are fresh documents that only see the pad after a press; announcing
+  // that as "Controller detected" on every dialog reads like a reconnection.
+  if (!ctx.platform.isModalLayer) {
+    controllerStatusIndicator.update({
+      connectedGamepads: snapshot.connectedGamepads,
+      activeGamepadId: snapshot.activeGamepadId,
+    });
+  }
   ctx.state.connectedGamepads = snapshot.connectedGamepads;
   ctx.state.activeGamepadId = snapshot.activeGamepadId;
   ctx.state.controllerRawAxes = snapshot.rawAxes;
   ctx.state.controllerRawButtons = snapshot.rawButtons;
   controllerSelectModal.updateDevices();
   controllerDebugModal.updateSnapshot();
+  // Shown whenever controller support is on: a fresh dialog window cannot see the pad
+  // until its first press, so "connected" would hide the hints exactly when needed.
+  mediaTimingReviewModal.setControllerHintsVisible(ctx.state.controllerConfig?.enabled === true);
 }
 
 function showControllerDisabledNotice(): void {
@@ -424,6 +438,7 @@ function startControllerPolling(): void {
         stickDeadzone: 0.2,
         triggerInputMode: 'auto',
         triggerDeadzone: 0.5,
+        faceButtonLabels: 'xbox',
         repeatDelayMs: 320,
         repeatIntervalMs: 120,
         buttonIndices: {
@@ -507,6 +522,9 @@ function startControllerPolling(): void {
     onState: (snapshot) => {
       applyControllerSnapshot(snapshot);
     },
+    getScreenLayout: () =>
+      ctx.state.mediaTimingReviewModalOpen ? mediaTimingReviewControllerLayout : null,
+    getSuspended: () => ctx.state.controllerSuspendedByModalWindow,
   });
 
   const poll = (now: number): void => {
@@ -694,6 +712,10 @@ function registerKeyboardCommandHandlers(): void {
     runGuarded('session:numeric-selection-start', () => {
       keyboardHandlers.beginSessionNumericSelection(payload.actionId, payload.timeoutMs);
     });
+  });
+
+  window.electronAPI.onControllerSuspendedChanged((suspended: boolean) => {
+    ctx.state.controllerSuspendedByModalWindow = suspended;
   });
 
   window.electronAPI.onKeyboardModeToggleRequested(() => {
