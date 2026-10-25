@@ -29,6 +29,7 @@ import type {
   ControllerFaceButtonLabels,
   Keybinding,
   ResolvedControllerBindingsConfig,
+  ResolvedControllerReviewBindings,
 } from './runtime';
 import type {
   FrequencyDictionaryMatchMode,
@@ -220,6 +221,7 @@ export interface ResolvedConfig {
     repeatIntervalMs: number;
     buttonIndices: Required<ControllerButtonIndicesConfig>;
     bindings: Required<ResolvedControllerBindingsConfig>;
+    reviewBindings: ResolvedControllerReviewBindings;
     profiles: Record<string, ResolvedControllerProfileConfig>;
   };
   ankiConnect: AnkiConnectConfig & {
