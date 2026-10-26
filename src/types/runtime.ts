@@ -300,6 +300,20 @@ export type ControllerReviewAction =
   | 'skipMedia'
   | 'discard';
 
+/** Every button on the duplicate-card field grouping dialog, named by what it does. */
+export type ControllerFieldGroupingAction =
+  | 'selectOriginal'
+  | 'selectNew'
+  | 'toggleDeleteDuplicate'
+  | 'continue'
+  | 'cancel'
+  | 'confirmMerge'
+  | 'back'
+  | 'cancelMerge'
+  | 'toggleView'
+  | 'scrollUp'
+  | 'scrollDown';
+
 export type ControllerFaceLetter = 'a' | 'b' | 'x' | 'y';
 export type ControllerDpadDirection = 'left' | 'right' | 'up' | 'down';
 
@@ -331,11 +345,20 @@ export type ResolvedControllerReviewBindings = Record<
   ResolvedControllerReviewBinding
 >;
 
+export type ControllerFieldGroupingBindingsConfig = Partial<
+  Record<ControllerFieldGroupingAction, ControllerReviewBindingConfig>
+>;
+export type ResolvedControllerFieldGroupingBindings = Record<
+  ControllerFieldGroupingAction,
+  ResolvedControllerReviewBinding
+>;
+
 export interface ControllerProfileConfig {
   label?: string;
   buttonIndices?: ControllerButtonIndicesConfig;
   bindings?: ControllerBindingsConfig;
   reviewBindings?: ControllerReviewBindingsConfig;
+  fieldGroupingBindings?: ControllerFieldGroupingBindingsConfig;
 }
 
 export interface ResolvedControllerProfileConfig {
@@ -343,6 +366,7 @@ export interface ResolvedControllerProfileConfig {
   buttonIndices: Required<ControllerButtonIndicesConfig>;
   bindings: Required<ResolvedControllerBindingsConfig>;
   reviewBindings: ResolvedControllerReviewBindings;
+  fieldGroupingBindings: ResolvedControllerFieldGroupingBindings;
 }
 
 export interface ControllerConfig {
@@ -361,6 +385,7 @@ export interface ControllerConfig {
   buttonIndices?: ControllerButtonIndicesConfig;
   bindings?: ControllerBindingsConfig;
   reviewBindings?: ControllerReviewBindingsConfig;
+  fieldGroupingBindings?: ControllerFieldGroupingBindingsConfig;
   profiles?: Record<string, ControllerProfileConfig>;
 }
 
