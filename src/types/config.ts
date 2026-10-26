@@ -29,6 +29,7 @@ import type {
   ControllerFaceButtonLabels,
   Keybinding,
   ResolvedControllerBindingsConfig,
+  ResolvedControllerFieldGroupingBindings,
   ResolvedControllerReviewBindings,
 } from './runtime';
 import type {
@@ -222,6 +223,7 @@ export interface ResolvedConfig {
     buttonIndices: Required<ControllerButtonIndicesConfig>;
     bindings: Required<ResolvedControllerBindingsConfig>;
     reviewBindings: ResolvedControllerReviewBindings;
+    fieldGroupingBindings: ResolvedControllerFieldGroupingBindings;
     profiles: Record<string, ResolvedControllerProfileConfig>;
   };
   ankiConnect: AnkiConnectConfig & {
