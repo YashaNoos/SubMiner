@@ -38,7 +38,7 @@ Yomitan remains the default. Select the bundled Hachidori backend with `dictiona
 Create an Anki card from the exact playback moment with one key press, click, or controller input. SubMiner fills in the sentence, an audio clip, and a screenshot or animated image.
 
 <div align="center">
-  <img src="docs-site/public/screenshots/one-key-mining.png" width="800" alt="Anki card created from SubMiner with sentence, audio, and screenshot">
+  <img src="docs-site/public/screenshots/one-key-mining.png" width="800" alt="Yomitan lookup over an anime scene with Anki mining controls">
 </div>
 
 <br>
@@ -48,7 +48,7 @@ Create an Anki card from the exact playback moment with one key press, click, or
 Subtitles are annotated as they play with frequency highlighting, JLPT tags, N+1 targeting, and character names from a generated dictionary. Particles and grammar-only tokens stay plain so the words worth learning stand out.
 
 <div align="center">
-  <img src="docs-site/public/screenshots/annotations.png" width="800" alt="Annotated subtitles with frequency coloring, JLPT underlines, and N+1 targets">
+  <img src="docs-site/public/screenshots/annotations.png" width="800" alt="Annotated subtitles with frequency colors, character portraits, and JLPT underlines">
 </div>
 
 <br>
