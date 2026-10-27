@@ -45,6 +45,7 @@ import {
 } from './anki-field-config';
 import { createLogger } from './logger';
 import { captureLiveSubtitleMiningContext } from './core/services/mining';
+import { shiftSubtitleRangeToVideoClock } from './core/services/subtitle-clock';
 import {
   createUiFeedbackState,
   beginUpdateProgress,
@@ -1029,10 +1030,10 @@ export class AnkiIntegration {
       Number.isFinite(this.mpvClient.currentSubEnd) &&
       this.mpvClient.currentSubEnd > this.mpvClient.currentSubStart
     ) {
-      return {
-        startTime: this.mpvClient.currentSubStart,
-        endTime: this.mpvClient.currentSubEnd,
-      };
+      return shiftSubtitleRangeToVideoClock(
+        { startTime: this.mpvClient.currentSubStart, endTime: this.mpvClient.currentSubEnd },
+        this.mpvClient.currentSubDelay,
+      );
     }
 
     const currentTime = this.mpvClient.currentTimePos || 0;
@@ -1672,7 +1673,7 @@ export class AnkiIntegration {
           if (this.config.fields?.miscInfo) {
             result.miscInfoValue = this.formatMiscInfoPattern(
               audioFilename,
-              this.mpvClient.currentSubStart,
+              this.mpvClient.currentSubStart + this.mpvClient.currentSubDelay,
             );
           }
         }
@@ -1695,7 +1696,7 @@ export class AnkiIntegration {
           if (this.config.fields?.miscInfo && !result.miscInfoValue) {
             result.miscInfoValue = this.formatMiscInfoPattern(
               imageFilename,
-              this.mpvClient.currentSubStart,
+              this.mpvClient.currentSubStart + this.mpvClient.currentSubDelay,
             );
           }
         }
