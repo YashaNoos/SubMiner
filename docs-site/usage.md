@@ -22,7 +22,7 @@ The bundled Yomitan is separate from any Yomitan in your browser. It has its own
 
 ### Hachidori setup
 
-Hachidori is an alternative lookup backend. Set `dictionaryBackend` to `"hachidori"` in settings or `config.jsonc`, then restart SubMiner. Set it back to `"yomitan"` and restart to switch back.
+[Hachidori](https://github.com/bee-san/hachidori) is an alternative lookup backend. Set `dictionaryBackend` to `"hachidori"` in settings or `config.jsonc`, then restart SubMiner. Set it back to `"yomitan"` and restart to switch back.
 
 Open Hachidori settings with `Alt+Shift+Y`, the tray's **Open Hachidori Settings**, or `subminer app --hachidori`. Import dictionary ZIPs or use Hachidori's recommended dictionary installer, then set up its Anki template (SubMiner [fills in what it can](/anki-integration#hachidori-settings-from-subminer)). Yomitan and Hachidori keep separate dictionaries and settings. Yomitan profiles, custom Handlebars templates, and `yomitan.externalProfilePath` do not carry over. Subtitle annotations and lookups wait while Hachidori imports a dictionary, so large imports pause them until the import finishes.
 
