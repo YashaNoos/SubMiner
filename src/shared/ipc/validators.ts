@@ -211,6 +211,10 @@ function parseControllerBindings(value: unknown): ControllerConfigUpdate['bindin
     'holdSecondarySub',
     'previousEntry',
     'nextEntry',
+    'previousSubtitle',
+    'nextSubtitle',
+    'replaySubtitle',
+    'playNextSubtitle',
   ] as const;
   for (const key of discreteKeys) {
     if (value[key] === undefined) continue;

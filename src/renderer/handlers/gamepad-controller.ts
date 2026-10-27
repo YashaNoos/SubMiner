@@ -56,6 +56,10 @@ type GamepadControllerOptions = {
   previousEntry: () => void;
   nextEntry: () => void;
   toggleMpvPause: () => void;
+  previousSubtitle: () => void;
+  nextSubtitle: () => void;
+  replaySubtitle: () => void;
+  playNextSubtitle: () => void;
   setSecondarySubHeld: (held: boolean) => void;
   scrollPopup: (deltaPixels: number) => void;
   jumpPopup: (deltaPixels: number) => void;
@@ -267,6 +271,14 @@ function resolveAxisBindingValue(
   return axisValue;
 }
 
+/** Subtitle navigation actions; like the secondary hold, they do not need keyboard-only mode. */
+const SUBTITLE_ACTIONS = [
+  'previousSubtitle',
+  'nextSubtitle',
+  'replaySubtitle',
+  'playNextSubtitle',
+] as const;
+
 export function createGamepadController(options: GamepadControllerOptions) {
   let previousActions = new Map<string, boolean>();
   let selectionHold = createHoldState();
@@ -393,6 +405,7 @@ export function createGamepadController(options: GamepadControllerOptions) {
       ['previousEntry', config.bindings.previousEntry],
       ['nextEntry', config.bindings.nextEntry],
       ['toggleMpvPause', config.bindings.toggleMpvPause],
+      ...SUBTITLE_ACTIONS.map((actionKey) => [actionKey, config.bindings[actionKey]] as const),
     ] as const;
 
     for (const [actionKey, binding] of discreteActions) {
@@ -493,6 +506,19 @@ export function createGamepadController(options: GamepadControllerOptions) {
           activeConfig,
         ),
     );
+
+    // Subtitle navigation also works while simply watching; a blocking modal pauses it.
+    if (activeConfig.enabled && !options.getInteractionBlocked()) {
+      for (const actionKey of SUBTITLE_ACTIONS) {
+        handleActionEdge(
+          actionKey,
+          activeConfig.bindings[actionKey],
+          activeGamepad,
+          activeConfig,
+          options[actionKey],
+        );
+      }
+    }
 
     if (activeConfig.enabled) {
       handleActionEdge(
