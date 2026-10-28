@@ -3,6 +3,7 @@ import { resolveControllerConfigForGamepad } from '../controller-profile-config.
 import { createControllerBindingCapture } from '../handlers/controller-binding-capture.js';
 import { createControllerComboCapture } from '../handlers/controller-combo-capture.js';
 import {
+  CONTROLLER_FACE_BUTTON_STYLES,
   formatControllerReviewInput,
   getControllerScreenAction,
   getDefaultControllerScreenBindings,
@@ -111,7 +112,7 @@ export function createControllerSelectModal(
   const controllerConfigForm = createControllerConfigForm({
     container: ctx.dom.controllerConfigList,
     getControllerMapping: () => getSelectedController()?.mapping ?? null,
-    getFaceButtonLabels: () => ctx.state.controllerConfig?.faceButtonLabels,
+    getFaceButtonLabels: () => getSelectedControllerConfig()?.faceButtonLabels,
     getBindings: () =>
       getSelectedControllerConfig()?.bindings ?? {
         toggleLookup: { kind: 'button', buttonIndex: 0 },
@@ -126,6 +127,10 @@ export function createControllerSelectModal(
         holdSecondarySub: { kind: 'none' },
         previousEntry: { kind: 'none' },
         nextEntry: { kind: 'none' },
+        previousSubtitle: { kind: 'none' },
+        nextSubtitle: { kind: 'none' },
+        replaySubtitle: { kind: 'none' },
+        playNextSubtitle: { kind: 'none' },
         leftStickHorizontal: { kind: 'axis', axisIndex: 0, dpadFallback: 'horizontal' },
         leftStickVertical: { kind: 'axis', axisIndex: 1, dpadFallback: 'vertical' },
         rightStickHorizontal: { kind: 'axis', axisIndex: 3, dpadFallback: 'none' },
@@ -332,6 +337,43 @@ export function createControllerSelectModal(
     lastRenderedDevicesKey = getDevicesKey();
     lastRenderedActiveGamepadId = ctx.state.activeGamepadId;
     lastRenderedPreferredId = preferredId;
+    renderFaceButtonStylePicker();
+  }
+
+  /** Shows the button style of the controller being configured (its own, else the default). */
+  function renderFaceButtonStylePicker(): void {
+    const picker = ctx.dom.controllerSelectFaceButtonStyle;
+    const current = getSelectedControllerConfig()?.faceButtonLabels ?? 'xbox';
+    picker.innerHTML = '';
+    for (const style of CONTROLLER_FACE_BUTTON_STYLES) {
+      const option = document.createElement('option');
+      option.value = style.id;
+      option.textContent = `${style.name} (${style.hint})`;
+      option.selected = style.id === current;
+      picker.appendChild(option);
+    }
+    picker.value = current;
+  }
+
+  /** Saved for the controller being configured, like its remaps. */
+  async function saveFaceButtonStyle(
+    style: (typeof CONTROLLER_FACE_BUTTON_STYLES)[number],
+  ): Promise<void> {
+    const profileId = getSelectedControllerId();
+    try {
+      await saveControllerConfig(
+        profileId
+          ? { profiles: { [profileId]: { faceButtonLabels: style.id } } }
+          : { faceButtonLabels: style.id },
+      );
+      renderFaceButtonStylePicker();
+      controllerConfigForm.render();
+      setStatus(`Button style: ${style.name}.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setStatus(`Failed to save button style: ${message}`, true);
+      renderFaceButtonStylePicker();
+    }
   }
 
   async function saveControllerConfig(
@@ -344,6 +386,9 @@ export function createControllerSelectModal(
     }
     if (update.preferredGamepadLabel !== undefined) {
       ctx.state.controllerConfig.preferredGamepadLabel = update.preferredGamepadLabel;
+    }
+    if (update.faceButtonLabels) {
+      ctx.state.controllerConfig.faceButtonLabels = update.faceButtonLabels;
     }
     if (update.bindings) {
       ctx.state.controllerConfig.bindings = {
@@ -366,6 +411,7 @@ export function createControllerSelectModal(
         const currentProfile = ctx.state.controllerConfig.profiles[profileId];
         const baseProfile = currentProfile ?? {
           label: profileUpdate.label ?? profileId,
+          faceButtonLabels: ctx.state.controllerConfig.faceButtonLabels,
           buttonIndices: ctx.state.controllerConfig.buttonIndices,
           bindings: ctx.state.controllerConfig.bindings,
           reviewBindings: ctx.state.controllerConfig.reviewBindings,
@@ -373,6 +419,10 @@ export function createControllerSelectModal(
         };
         ctx.state.controllerConfig.profiles[profileId] = {
           label: profileUpdate.label ?? baseProfile.label,
+          faceButtonLabels:
+            profileUpdate.faceButtonLabels ??
+            baseProfile.faceButtonLabels ??
+            ctx.state.controllerConfig.faceButtonLabels,
           buttonIndices: {
             ...baseProfile.buttonIndices,
             ...(profileUpdate.buttonIndices ?? {}),
@@ -673,6 +723,11 @@ export function createControllerSelectModal(
     });
     ctx.dom.controllerSelectSave.addEventListener('click', () => {
       void saveSelectedController();
+    });
+    ctx.dom.controllerSelectFaceButtonStyle.addEventListener('change', () => {
+      const value = ctx.dom.controllerSelectFaceButtonStyle.value;
+      const style = CONTROLLER_FACE_BUTTON_STYLES.find((candidate) => candidate.id === value);
+      if (style) void saveFaceButtonStyle(style);
     });
     ctx.dom.controllerSelectPicker.addEventListener('change', () => {
       const selectedKey = ctx.dom.controllerSelectPicker.value;

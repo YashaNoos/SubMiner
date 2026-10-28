@@ -1,5 +1,6 @@
 import {
   findControllerScreenBindingIssues,
+  getControllerFaceButtonName,
   formatControllerReviewBinding,
   type ControllerReviewInputContext,
   type ControllerScreenActionDefinition,
@@ -101,6 +102,34 @@ export const CONTROLLER_BINDING_DEFINITIONS: ControllerBindingDefinition[] = [
     group: 'Playback',
     bindingType: 'discrete',
     defaultBinding: { kind: 'button', buttonIndex: 6 },
+  },
+  {
+    id: 'previousSubtitle',
+    label: 'Previous Subtitle',
+    group: 'Subtitles',
+    bindingType: 'discrete',
+    defaultBinding: { kind: 'none' },
+  },
+  {
+    id: 'nextSubtitle',
+    label: 'Next Subtitle',
+    group: 'Subtitles',
+    bindingType: 'discrete',
+    defaultBinding: { kind: 'none' },
+  },
+  {
+    id: 'replaySubtitle',
+    label: 'Replay Subtitle',
+    group: 'Subtitles',
+    bindingType: 'discrete',
+    defaultBinding: { kind: 'none' },
+  },
+  {
+    id: 'playNextSubtitle',
+    label: 'Play Next Subtitle',
+    group: 'Subtitles',
+    bindingType: 'discrete',
+    defaultBinding: { kind: 'none' },
   },
   {
     id: 'previousAudio',
@@ -240,9 +269,6 @@ const W3C_STANDARD_AXIS_NAMES: Record<number, string> = {
 type ControllerMapping = string | null | undefined;
 type FaceButtonLabels = ResolvedControllerConfig['faceButtonLabels'] | undefined;
 
-/** Nintendo-style pads print B at the bottom and A on the right; positions 0-3 are the same. */
-const NINTENDO_FACE_BUTTON_NAMES: Record<number, string> = { 0: 'B', 1: 'A', 2: 'Y', 3: 'X' };
-
 const DPAD_FALLBACK_LABELS: Record<ControllerDpadFallback, string> = {
   none: 'None',
   horizontal: 'D-pad \u2194',
@@ -254,9 +280,13 @@ export function getFriendlyButtonName(
   mapping?: ControllerMapping,
   faceButtonLabels?: FaceButtonLabels,
 ): string {
-  const nintendoName =
-    faceButtonLabels === 'nintendo' ? NINTENDO_FACE_BUTTON_NAMES[buttonIndex] : undefined;
-  if (nintendoName) return nintendoName;
+  // The default Xbox style keeps the shared "A / Cross" names; the others print their own.
+  // Face positions 0-3 are the same on raw and standard layouts.
+  const styledName =
+    faceButtonLabels && faceButtonLabels !== 'xbox'
+      ? getControllerFaceButtonName(buttonIndex, faceButtonLabels)
+      : null;
+  if (styledName) return styledName;
   const names = mapping === 'standard' ? W3C_STANDARD_BUTTON_NAMES : RAW_LAYOUT_BUTTON_NAMES;
   return names[buttonIndex] ?? `Button ${buttonIndex}`;
 }

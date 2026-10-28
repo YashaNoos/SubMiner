@@ -54,6 +54,7 @@ import {
   formatMediaTimingReviewControllerHints,
 } from './handlers/media-timing-review-controller.js';
 import { resolveControllerConfigForGamepad } from './controller-profile-config.js';
+import { dispatchConfiguredMpvCommand } from './utils/mpv-command-dispatch.js';
 import { getDefaultControllerReviewBindings } from '../shared/controller-review';
 import {
   CONTROLLER_FIELD_GROUPING_SCREEN,
@@ -461,6 +462,14 @@ function showControllerDisabledNotice(): void {
   );
 }
 
+/** A paused video stays paused after the jump, as with the keyboard shortcut. */
+function seekSubtitleForController(delta: -1 | 1): void {
+  void dispatchConfiguredMpvCommand(['sub-seek', delta], {
+    getPlaybackPaused: () => window.electronAPI.getPlaybackPaused(),
+    sendMpvCommand: (command) => window.electronAPI.sendMpvCommand(command),
+  });
+}
+
 function emitControllerPopupScroll(deltaPixels: number): void {
   if (deltaPixels === 0) return;
   keyboardHandlers.scrollPopupByController(0, deltaPixels);
@@ -519,6 +528,10 @@ function startControllerPolling(): void {
           holdSecondarySub: { kind: 'none' },
           previousEntry: { kind: 'none' },
           nextEntry: { kind: 'none' },
+          previousSubtitle: { kind: 'none' },
+          nextSubtitle: { kind: 'none' },
+          replaySubtitle: { kind: 'none' },
+          playNextSubtitle: { kind: 'none' },
           leftStickHorizontal: { kind: 'axis', axisIndex: 0, dpadFallback: 'horizontal' },
           leftStickVertical: { kind: 'axis', axisIndex: 1, dpadFallback: 'vertical' },
           rightStickHorizontal: { kind: 'axis', axisIndex: 3, dpadFallback: 'none' },
@@ -544,6 +557,19 @@ function startControllerPolling(): void {
     },
     quitMpv: () => {
       window.electronAPI.sendMpvCommand(['quit']);
+    },
+    // Same as Shift+H / Shift+L and Ctrl+Shift+H / Ctrl+Shift+L.
+    previousSubtitle: () => {
+      seekSubtitleForController(-1);
+    },
+    nextSubtitle: () => {
+      seekSubtitleForController(1);
+    },
+    replaySubtitle: () => {
+      void window.electronAPI.dispatchSessionAction('replayCurrentSubtitle');
+    },
+    playNextSubtitle: () => {
+      void window.electronAPI.dispatchSessionAction('playNextSubtitle');
     },
     previousAudio: () => {
       keyboardHandlers.cyclePopupAudioSourceForController(-1);
@@ -774,6 +800,16 @@ function registerKeyboardCommandHandlers(): void {
 
   window.electronAPI.onControllerSuspendedChanged((suspended: boolean) => {
     ctx.state.controllerSuspendedByModalWindow = suspended;
+  });
+
+  // Alt+C saves in its own window; pick up remaps and the button style without a restart.
+  window.electronAPI.onControllerConfigChanged(() => {
+    window.electronAPI
+      .getControllerConfig()
+      .then((config) => {
+        ctx.state.controllerConfig = config;
+      })
+      .catch((error: unknown) => console.error('Could not reload controller config', error));
   });
 
   window.electronAPI.onKeyboardModeToggleRequested(() => {

@@ -176,8 +176,11 @@ export type ControllerButtonBinding =
 
 export type ControllerAxisBinding = 'leftStickX' | 'leftStickY' | 'rightStickX' | 'rightStickY';
 export type ControllerTriggerInputMode = 'auto' | 'digital' | 'analog';
-/** Letters printed on the face buttons: Xbox-style (A at the bottom) or Nintendo-style (A on the right). */
-export type ControllerFaceButtonLabels = 'xbox' | 'nintendo';
+/**
+ * Face button style: Xbox (A at the bottom), Nintendo (A on the right) or PlayStation
+ * (╳ at the bottom, laid out like Xbox). Decides button names and where letters land.
+ */
+export type ControllerFaceButtonLabels = 'xbox' | 'nintendo' | 'playstation';
 export type ControllerAxisDirection = 'negative' | 'positive';
 export type ControllerDpadFallback = 'none' | 'horizontal' | 'vertical';
 
@@ -239,6 +242,10 @@ export interface ControllerBindingsConfig {
   holdSecondarySub?: ControllerDiscreteBindingConfig;
   previousEntry?: ControllerDiscreteBindingConfig;
   nextEntry?: ControllerDiscreteBindingConfig;
+  previousSubtitle?: ControllerDiscreteBindingConfig;
+  nextSubtitle?: ControllerDiscreteBindingConfig;
+  replaySubtitle?: ControllerDiscreteBindingConfig;
+  playNextSubtitle?: ControllerDiscreteBindingConfig;
   leftStickHorizontal?: ControllerAxisBindingConfig;
   leftStickVertical?: ControllerAxisBindingConfig;
   rightStickHorizontal?: ControllerAxisBindingConfig;
@@ -258,6 +265,10 @@ export interface ResolvedControllerBindingsConfig {
   holdSecondarySub?: ResolvedControllerDiscreteBinding;
   previousEntry?: ResolvedControllerDiscreteBinding;
   nextEntry?: ResolvedControllerDiscreteBinding;
+  previousSubtitle?: ResolvedControllerDiscreteBinding;
+  nextSubtitle?: ResolvedControllerDiscreteBinding;
+  replaySubtitle?: ResolvedControllerDiscreteBinding;
+  playNextSubtitle?: ResolvedControllerDiscreteBinding;
   leftStickHorizontal?: ResolvedControllerAxisBinding;
   leftStickVertical?: ResolvedControllerAxisBinding;
   rightStickHorizontal?: ResolvedControllerAxisBinding;
@@ -357,6 +368,8 @@ export type ResolvedControllerFieldGroupingBindings = Record<
 
 export interface ControllerProfileConfig {
   label?: string;
+  /** Overrides `controller.faceButtonLabels` for this controller; set from Alt+C. */
+  faceButtonLabels?: ControllerFaceButtonLabels;
   buttonIndices?: ControllerButtonIndicesConfig;
   bindings?: ControllerBindingsConfig;
   reviewBindings?: ControllerReviewBindingsConfig;
@@ -365,6 +378,7 @@ export interface ControllerProfileConfig {
 
 export interface ResolvedControllerProfileConfig {
   label: string;
+  faceButtonLabels: ControllerFaceButtonLabels;
   buttonIndices: Required<ControllerButtonIndicesConfig>;
   bindings: Required<ResolvedControllerBindingsConfig>;
   reviewBindings: ResolvedControllerReviewBindings;
@@ -663,6 +677,8 @@ export interface ElectronAPI {
   ) => void;
   onKeyboardModeToggleRequested: (callback: () => void) => void;
   onControllerSuspendedChanged: (callback: (suspended: boolean) => void) => void;
+  /** Alt+C saved controller settings; reload them with `getControllerConfig`. */
+  onControllerConfigChanged: (callback: () => void) => void;
   onLookupWindowToggleRequested: (callback: () => void) => void;
   getPlaylistBrowserSnapshot: () => Promise<PlaylistBrowserSnapshot>;
   appendPlaylistBrowserFile: (path: string) => Promise<PlaylistBrowserMutationResult>;
