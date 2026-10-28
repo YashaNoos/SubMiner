@@ -371,6 +371,8 @@ export function createBuildBindMpvMainEventHandlersMainDepsHandler(deps: {
       : undefined,
     recordPauseState: (paused: boolean) => {
       deps.appState.playbackPaused = paused;
+      // Lets keyboard-only mode's auto-pause see the user playing or pausing themselves.
+      deps.broadcastToOverlayWindows('mpv:pause-changed', paused);
       deps.ensureImmersionTrackerInitialized();
       deps.appState.immersionTracker?.recordPauseState?.(paused);
     },
