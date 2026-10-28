@@ -40,6 +40,8 @@ export function createKeyboardHandlers(
     openControllerSelectModal?: () => void;
     openControllerDebugModal?: () => void;
     getPlaybackPaused: () => Promise<boolean | null>;
+    /** Keyboard-only mode turned on or off (keyboard shortcut or controller). */
+    onKeyboardDrivenModeChanged?: (enabled: boolean) => void;
     toggleSubtitleSidebarModal?: () => void;
   },
 ) {
@@ -549,6 +551,7 @@ export function createKeyboardHandlers(
   }
 
   function setKeyboardDrivenModeEnabled(enabled: boolean): void {
+    const changed = ctx.state.keyboardDrivenModeEnabled !== enabled;
     ctx.state.keyboardDrivenModeEnabled = enabled;
     ctx.state.keyboardSelectionVisible = enabled;
     if (!enabled) {
@@ -559,6 +562,7 @@ export function createKeyboardHandlers(
       clearNativeSubtitleSelection();
     }
     syncKeyboardTokenSelection();
+    if (changed) options.onKeyboardDrivenModeChanged?.(enabled);
   }
 
   function toggleKeyboardDrivenMode(): void {
