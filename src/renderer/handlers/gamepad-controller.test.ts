@@ -69,6 +69,7 @@ const VOID_ACTIONS = [
   'playCurrentAudio',
   'previousEntry',
   'nextEntry',
+  'toggleCharacterNavigation',
   'toggleMpvPause',
   'previousSubtitle',
   'nextSubtitle',
@@ -117,6 +118,7 @@ function createHarness(
     playCurrentAudio: () => {},
     previousEntry: () => {},
     nextEntry: () => {},
+    toggleCharacterNavigation: () => {},
     toggleMpvPause: () => {},
     previousSubtitle: () => {},
     nextSubtitle: () => {},
@@ -606,6 +608,33 @@ test('gamepad controller moves one popup entry per press while the lookup is ope
   harness.poll(864);
 
   assert.deepEqual(harness.calls, ['nextEntry', 'nextEntry', 'previousEntry']);
+});
+
+test('gamepad controller switches character navigation once per press in keyboard-only mode', () => {
+  assert.deepEqual(CORE_DEFAULT_CONFIG.controller.bindings.toggleCharacterNavigation, {
+    kind: 'none',
+  });
+  let buttons: Record<number, TestButton> = {};
+  let keyboardMode = true;
+  const harness = createHarness({
+    gamepads: () => [createGamepad('pad-1', { buttons })],
+    config: createControllerConfig({
+      bindings: { toggleCharacterNavigation: { kind: 'button', buttonIndex: 10 } },
+    }),
+    deps: { getKeyboardModeEnabled: () => keyboardMode },
+  });
+
+  harness.poll(0);
+  buttons = { 10: PRESSED };
+  harness.poll(16, 32, 400);
+  buttons = {};
+  harness.poll(416);
+  // Like the other lookup actions, it waits for keyboard-only mode.
+  keyboardMode = false;
+  buttons = { 10: PRESSED };
+  harness.poll(432);
+
+  assert.deepEqual(harness.calls, ['toggleCharacterNavigation']);
 });
 
 test('gamepad controller ignores popup entry navigation while the lookup is closed', () => {
