@@ -275,6 +275,15 @@ function resolveAxisBindingValue(
   return axisValue;
 }
 
+/** Discrete actions that only act while the lookup popup is open. */
+const POPUP_ONLY_ACTIONS = [
+  'previousAudio',
+  'nextAudio',
+  'playCurrentAudio',
+  'previousEntry',
+  'nextEntry',
+] as const;
+
 /** Playback and subtitle actions; like the secondary hold, they do not need keyboard-only mode. */
 const WATCHING_ACTIONS = [
   'toggleMpvPause',
@@ -635,6 +644,19 @@ export function createGamepadController(options: GamepadControllerOptions) {
       );
     } else {
       resetHeldAction(jumpHold);
+      // Popup-only buttons keep tracking the pad while the popup is closed, like blocked
+      // actions do: a release is not missed, and a button held as the popup opens waits for
+      // a fresh press instead of firing at once.
+      for (const actionKey of POPUP_ONLY_ACTIONS) {
+        previousActions.set(
+          actionKey,
+          resolveDiscreteBindingPressed(
+            activeGamepad,
+            activeConfig.bindings[actionKey],
+            activeConfig,
+          ),
+        );
+      }
     }
 
     handleSelectionAxis(
